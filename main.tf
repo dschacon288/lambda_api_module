@@ -35,6 +35,24 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_kms_policy" {
+  name = "${var.module_lambda_name}_kms_policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "arn:aws:kms:us-east-1:767398084939:key/85dd62f3-a6cc-452c-adbc-886160506dcb"
+      }
+    ]
+  })
+}
+
 # IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.module_lambda_name}_policy"
