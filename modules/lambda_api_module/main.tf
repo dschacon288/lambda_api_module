@@ -8,7 +8,7 @@ resource "aws_lambda_function" "lambda" {
   runtime          = "python3.9"
   handler          = "app.lambda_handler"
   role             = aws_iam_role.lambda_exec.arn
-  filename         = "${path.module}/lambda_code/lambda_function.zip"  # TODO crear la lambda
+  filename         = "${path.module}/lambda_code/lambda_function.zip"
 
   environment {
     variables = {
@@ -37,9 +37,30 @@ resource "aws_iam_role" "lambda_exec" {
 
 # IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
-  name   = "${var.lambda_name}_policy"
-  role   = aws_iam_role.lambda_exec.id
-  policy = file("${path.module}/policies/lambda_policy.json") ## TODO Crear policy
+  name = "${var.lambda_name}_policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "lambda:InvokeFunction"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 # API Gateway
