@@ -1,10 +1,10 @@
 provider "aws" {
-  region = var.aws_region
+  region = var.module_aws_region
 }
 
 # Lambda Function
 resource "aws_lambda_function" "lambda" {
-  function_name    = var.lambda_name
+  function_name    = var.module_lambda_name
   runtime          = "python3.9"
   handler          = "app.lambda_handler"
   role             = aws_iam_role.lambda_exec.arn
@@ -12,14 +12,14 @@ resource "aws_lambda_function" "lambda" {
 
   environment {
     variables = {
-      ENV_VAR = var.lambda_env_var
+      ENV_VAR = var.module_lambda_env_var
     }
   }
 }
 
 # Lambda Execution Role
 resource "aws_iam_role" "lambda_exec" {
-  name = "${var.lambda_name}_execution_role"
+  name = "${var.module_lambda_name}_execution_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -37,7 +37,7 @@ resource "aws_iam_role" "lambda_exec" {
 
 # IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
-  name = "${var.lambda_name}_policy"
+  name = "${var.module_lambda_name}_policy"
   role = aws_iam_role.lambda_exec.id
 
   policy = jsonencode({
@@ -65,7 +65,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # API Gateway
 resource "aws_api_gateway_rest_api" "api" {
-  name = var.api_name
+  name = var.module_api_name
 }
 
 resource "aws_api_gateway_resource" "resource" {
@@ -92,7 +92,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 
 # Cognito Authorizer
 resource "aws_cognito_user_pool" "user_pool" {
-  name = var.cognito_user_pool_name
+  name = var.module_cognito_user_pool_name
 }
 
 resource "aws_api_gateway_authorizer" "cognito" {
@@ -104,7 +104,7 @@ resource "aws_api_gateway_authorizer" "cognito" {
 
 # WAF
 resource "aws_wafv2_web_acl" "waf" {
-  name        = var.waf_name
+  name        = var.module_waf_name
   scope       = "REGIONAL"
   description = "Basic WAF configuration"
   default_action {
@@ -159,7 +159,7 @@ resource "aws_wafv2_web_acl" "waf" {
   visibility_config {
     sampled_requests_enabled = true
     cloudwatch_metrics_enabled = true
-    metric_name = var.waf_name
+    metric_name = var.module_waf_name
   }
 }
 
@@ -169,7 +169,7 @@ resource "aws_wafv2_ip_set" "block_ips" {
   scope             = "REGIONAL"
   ip_address_version = "IPV4"
 
-  addresses = var.blocked_ips
+  addresses = var.module_blocked_ips
 }
 
 
@@ -178,5 +178,5 @@ resource "aws_wafv2_ip_set" "block_ips" {
   scope       = "REGIONAL"
   ip_address_version = "IPV4"
 
-  addresses = var.blocked_ips
+  addresses = var.module_blocked_ips
 }
