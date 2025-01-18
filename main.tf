@@ -171,12 +171,3 @@ resource "aws_wafv2_ip_set" "block_ips" {
 
   addresses = var.module_blocked_ips
 }
-
-
-resource "aws_wafv2_ip_set" "block_ips" {
-  name        = "block_ips"
-  scope       = "REGIONAL"
-  ip_address_version = "IPV4"
-
-  addresses = var.module_blocked_ips
-}
