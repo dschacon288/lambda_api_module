@@ -47,7 +47,7 @@ resource "aws_iam_role_policy" "lambda_kms_policy" {
         Action = [
           "kms:Decrypt"
         ]
-        Resource = "arn:aws:kms:us-east-1:767398084939:key/85dd62f3-a6cc-452c-adbc-886160506dcb"
+        Resource = "arn:aws:kms:us-east-1:767398084939:key/*"
       }
     ]
   })
@@ -96,7 +96,7 @@ resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.resource.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS" # usar Cognito Authorizer
+  authorization = "COGNITO_USER_POOLS" # Usar Cognito Authorizer
   authorizer_id = aws_api_gateway_authorizer.cognito.id # Asociar Cognito Authorizer
 }
 
