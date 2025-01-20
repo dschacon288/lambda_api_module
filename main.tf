@@ -35,6 +35,24 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+resource "aws_iam_role_policy" "lambda_kms_policy" {
+  name = "${var.module_lambda_name}_kms_policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "arn:aws:kms:us-east-1:767398084939:key/*"
+      }
+    ]
+  })
+}
+
 # IAM Policy for Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.module_lambda_name}_policy"
@@ -78,7 +96,8 @@ resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.resource.id
   http_method   = "GET"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS" # Usar Cognito Authorizer
+  authorizer_id = aws_api_gateway_authorizer.cognito.id # Asociar Cognito Authorizer
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
@@ -100,6 +119,21 @@ resource "aws_api_gateway_authorizer" "cognito" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   type          = "COGNITO_USER_POOLS"
   provider_arns = [aws_cognito_user_pool.user_pool.arn]
+}
+
+# API Gateway Deployment and Stage
+resource "aws_api_gateway_deployment" "deployment" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  triggers = {
+    redeployment = sha1(join("", [aws_api_gateway_method.method.id]))
+  }
+  depends_on = [aws_api_gateway_integration.lambda_integration]
+}
+
+resource "aws_api_gateway_stage" "stage" {
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  stage_name    = "dev"
 }
 
 # WAF
